@@ -1,12 +1,12 @@
 import { useTextOverlay } from "./TextOverlayContext";
 
 const RightSideBar = () => {
-  const { text, setText, color, setColor, font, setFont, position, setPosition } = useTextOverlay();
+  const { text, setText, color, setColor, font, setFont, position, setPosition, imgSize } = useTextOverlay();
 
   return (
     <div className="w-64 bg-gray-100 p-4 shadow-lg rounded-lg h-screen flex flex-col">
       <h2 className="text-lg font-semibold mb-4">Customize Text</h2>
-      
+
       {/* Text Input */}
       <label className="mb-2">Text:</label>
       <input
@@ -39,22 +39,22 @@ const RightSideBar = () => {
       </select>
 
       {/* X Position */}
-      <label className="mb-2">X Position:</label>
+      <label className="mb-2">X Position (max: {imgSize.width}):</label>
       <input
         type="range"
         min="0"
-        max="500"
+        max={imgSize.width}
         value={position.x}
         onChange={(e) => setPosition({ ...position, x: Number(e.target.value) })}
         className="mb-2"
       />
 
       {/* Y Position */}
-      <label className="mb-2">Y Position:</label>
+      <label className="mb-2">Y Position (max: {imgSize.height}):</label>
       <input
         type="range"
         min="0"
-        max="500"
+        max={imgSize.height}
         value={position.y}
         onChange={(e) => setPosition({ ...position, y: Number(e.target.value) })}
         className="mb-2"
