@@ -1,11 +1,13 @@
 import { useTemplate } from "./TemplateContext";
 import { useTextOverlay } from "./TextOverlayContext";
-import { useRef, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
 const PlayGround = () => {
   const { selectedTemplate } = useTemplate();
   const { text, color, font, position, imgSize, setImgSize } = useTextOverlay();
   const imgRef = useRef<HTMLImageElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const [textSize, setTextSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const updateSize = () => {
@@ -24,6 +26,20 @@ const PlayGround = () => {
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
   }, [selectedTemplate]);
+
+  // Get text dimensions dynamically
+  useEffect(() => {
+    if (textRef.current) {
+      setTextSize({
+        width: textRef.current.clientWidth,
+        height: textRef.current.clientHeight,
+      });
+    }
+  }, [text, font, position, imgSize]);
+
+  // Adjust text position to prevent overflow
+  const safeX = Math.max(0, Math.min(position.x, imgSize.width - textSize.width));
+  const safeY = Math.max(0, Math.min(position.y, imgSize.height - textSize.height));
 
   return (
     <div className="flex justify-center items-center w-full h-screen bg-gray-200">
@@ -44,16 +60,19 @@ const PlayGround = () => {
 
           {/* Debugging Info */}
           <p className="absolute top-2 left-2 bg-black text-white p-1 text-xs">
-            Image Size: {imgSize.width} x {imgSize.height} | Text Position: {position.x}, {position.y}
+            Image Size: {imgSize.width} x {imgSize.height} | 
+            Text Size: {textSize.width} x {textSize.height} | 
+            Text Position: {safeX}, {safeY}
           </p>
 
           {/* Text Overlay */}
           {text && (
             <div
+              ref={textRef} // Reference to measure text size
               className="absolute"
               style={{
-                top: `${position.y}px`,
-                left: `${position.x}px`,
+                top: `${safeY}px`,
+                left: `${safeX}px`,
                 color: color,
                 fontFamily: font,
                 fontSize: "24px",
