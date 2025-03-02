@@ -53,33 +53,44 @@ const PlayGround = () => {
 
   const saveImage = () => {
     if (!canvasRef.current || !imgRef.current) return;
-
+  
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = imgSize.width;
-    canvas.height = imgSize.height;
-
-    // Draw the image onto the canvas
-    ctx.drawImage(imgRef.current, 0, 0, imgSize.width, imgSize.height);
-
-    // Draw the text
-    ctx.font = `${fontSize}px ${font}`;
-    ctx.fillStyle = color;
-    ctx.textBaseline = "top";
-    ctx.fillText(text, safeX, safeY);
-
-    // Convert to image and download
-    const dataUrl = canvas.toDataURL("image/png");
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = "custom-image.png";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Fix CORS issue
+    img.src = selectedTemplate;
+  
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+      // Draw the text
+      ctx.font = `${fontSize}px ${font}`;
+      ctx.fillStyle = color;
+      ctx.textBaseline = "top";
+      ctx.fillText(text, position.x, position.y);
+  
+      try {
+        const dataUrl = canvas.toDataURL("image/png"); // Ensures it's only called after the image is loaded
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = "custom-image.png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error("Failed to generate image:", error);
+      }
+    };
+  
+    img.onerror = () => {
+      console.error("Failed to load image:", selectedTemplate);
+    };
   };
+  
 
   return (
     <div className="flex flex-col items-center w-full h-screen bg-gray-200">
