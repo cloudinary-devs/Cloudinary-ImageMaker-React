@@ -42,10 +42,10 @@ console.log("Mapped Position (Absolute):", { x: mappedX, y: mappedY });
 // Apply position mapping using absolute values
 myImage.overlay(
   source(
-    cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
+    cloudinaryText(text, new TextStyle(font, adjustedFontSize))
       .textColor(color)
   ).position(
-    new Position().gravity(compass('north_west')).offsetX(mappedX).offsetY(mappedY) // Use absolute values
+    new Position().gravity(compass('north_west')).offsetX(mappedX).offsetY(mappedY)
   )
 );
 
