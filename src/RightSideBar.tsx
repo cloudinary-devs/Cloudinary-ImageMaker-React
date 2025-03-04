@@ -1,11 +1,35 @@
+import { Cloudinary } from "@cloudinary/url-gen/index";
 import { useTextOverlay } from "./TextOverlayContext";
 import Papa from "papaparse";
 import { useState, useRef } from "react";
+// Import required actions.
+import {source} from "@cloudinary/url-gen/actions/overlay";
+import {text as cloudinaryText} from "@cloudinary/url-gen/qualifiers/source";
+import { TextStyle } from "@cloudinary/url-gen/qualifiers/textStyle";
+import { Position } from "@cloudinary/url-gen/qualifiers";
 
 const RightSideBar = () => {
   const { text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize } = useTextOverlay();
   const [csvData, setCsvData] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Create and configure your Cloudinary instance.
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: 'invite-maker'
+  }
+}); 
+
+// Use the image with public ID, 'sample'.
+const myImage = cld.image('templates/1.png');
+//.resize(scale(Math.round(imgSize.width), Math.round(imgSize.height)))
+myImage.overlay(
+  source(cloudinaryText(text, new TextStyle(font, fontSize)).textColor(color)      
+  ).position(new Position().offsetY(position.y).offsetX(position.x))
+);
+  // Return the delivery URL
+  const myUrl = myImage.toURL();
+  console.log(myUrl)
 
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
