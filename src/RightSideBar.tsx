@@ -65,6 +65,7 @@ myImage.overlay(
         />
 
         <label className="mb-2">Font:</label>
+        {/* As for font families, we offer several built-in options, including Arial, Verdana, Helvetica, Trebuchet MS, Times New Roman, Georgia, Courier New, Open Sans, Roboto, and Montserrat. */}
         <select
           value={font}
           onChange={(e) => setFont(e.target.value)}
