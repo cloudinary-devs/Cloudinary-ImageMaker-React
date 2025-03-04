@@ -3,55 +3,84 @@ import { useTextOverlay } from "./TextOverlayContext";
 import Papa from "papaparse";
 import { useState, useRef } from "react";
 // Import required actions.
-import {source} from "@cloudinary/url-gen/actions/overlay";
-import {text as cloudinaryText} from "@cloudinary/url-gen/qualifiers/source";
+import { source } from "@cloudinary/url-gen/actions/overlay";
+import { text as cloudinaryText } from "@cloudinary/url-gen/qualifiers/source";
 import { TextStyle } from "@cloudinary/url-gen/qualifiers/textStyle";
 import { Position } from "@cloudinary/url-gen/qualifiers";
 import { compass } from "@cloudinary/url-gen/qualifiers/gravity";
+import { fill } from "@cloudinary/url-gen/actions/resize";
 
 const RightSideBar = () => {
-  const { text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize, imgOriginalSize } = useTextOverlay();
+  const {
+    text,
+    setText,
+    color,
+    setColor,
+    font,
+    setFont,
+    fontSize,
+    setFontSize,
+    position,
+    setPosition,
+    imgSize,
+    imgOriginalSize,
+  } = useTextOverlay();
   const [csvData, setCsvData] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create and configure your Cloudinary instance.
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: 'invite-maker'
-  }
-}); 
+  const cld = new Cloudinary({
+    cloud: {
+      cloudName: "invite-maker",
+    },
+  });
+  const myImage = cld.image("templates/1.png");
+  // Compute precise scaling ratios
+  const scaleX = imgOriginalSize.width / imgSize.width;
+  const scaleY = imgOriginalSize.height / imgSize.height;
 
-// Ensure proportional scaling when generating the Cloudinary URL
-const myImage = cld.image('templates/1.png');
-// Compute precise scaling ratios
-const scaleX = imgOriginalSize.width / imgSize.width;
-const scaleY = imgOriginalSize.height / imgSize.height;
+  // Scale font size proportionally
+  const adjustedFontSize = Math.round(fontSize * scaleX);
 
-// Correctly map X and Y positions based on original size
-const mappedX = Math.round(position.x * scaleX);
-const mappedY = Math.round(position.y * scaleY);
+  // Estimate text width using an approximate character size multiplier
+  const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width (adjust as needed)
 
-// Scale font size proportionally
-const adjustedFontSize = Math.round(fontSize * scaleX);
+  // Correctly map X and Y positions based on original size
+  const mappedX = Math.max(
+    0,
+    Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
+  );
+  const mappedY = Math.max(
+    0,
+    Math.min(position.y * scaleY, imgOriginalSize.height - adjustedFontSize)
+  );
 
-console.log("Original Image:", imgOriginalSize);
-console.log("Scaled Image:", imgSize);
-console.log("Original Position:", position);
-console.log("Mapped Position (Absolute):", { x: mappedX, y: mappedY });
+  console.log("Original Image:", imgOriginalSize);
+  console.log("Scaled Image:", imgSize);
+  console.log("Original Position:", position);
+  console.log("Mapped Position (Absolute, Safe Area):", {
+    x: mappedX,
+    y: mappedY,
+  });
+  console.log("Estimated Text Width:", estimatedTextWidth);
+  console.log("Adjusted Font Size:", adjustedFontSize);
 
-// Apply position mapping using absolute values
-myImage.overlay(
-  source(
-    cloudinaryText(text, new TextStyle(font, adjustedFontSize))
-      .textColor(color)
-  ).position(
-    new Position().gravity(compass('north_west')).offsetX(mappedX).offsetY(mappedY)
-  )
-);
+  // Apply position mapping using absolute values
+  myImage.overlay(
+    source(
+      cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
+        .textColor(color)
+    ).position(
+      new Position()
+        .gravity(compass("north_west"))
+        .offsetX(Math.round(mappedX + estimatedTextWidth / 8))
+        .offsetY(Math.round(mappedY + adjustedFontSize / 2)) // Use absolute values
+    )
+  );
 
-// Generate the Cloudinary URL
-const myUrl = myImage.toURL();
-console.log(myUrl);
+  // Generate the Cloudinary URL
+  const myUrl = myImage.toURL();
+  console.log(myUrl);
 
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -60,7 +89,10 @@ console.log(myUrl);
     Papa.parse<string[]>(file, {
       complete: (result) => {
         const filteredData = result.data
-          .filter((row, index) => index !== 0 || (row[0] && row[0].toLowerCase() !== "name"))
+          .filter(
+            (row, index) =>
+              index !== 0 || (row[0] && row[0].toLowerCase() !== "name")
+          )
           .map((row) => row[0]);
         setCsvData(filteredData);
       },
@@ -116,7 +148,9 @@ console.log(myUrl);
           min="0"
           max={imgSize.width - fontSize}
           value={position.x}
-          onChange={(e) => setPosition({ ...position, x: Number(e.target.value) })}
+          onChange={(e) =>
+            setPosition({ ...position, x: Number(e.target.value) })
+          }
           className="mb-2"
         />
 
@@ -126,7 +160,9 @@ console.log(myUrl);
           min="0"
           max={imgSize.height - fontSize}
           value={position.y}
-          onChange={(e) => setPosition({ ...position, y: Number(e.target.value) })}
+          onChange={(e) =>
+            setPosition({ ...position, y: Number(e.target.value) })
+          }
           className="mb-2"
         />
       </div>
@@ -160,7 +196,6 @@ console.log(myUrl);
         </div>
       </div>
     </div>
-    
   );
 };
 
