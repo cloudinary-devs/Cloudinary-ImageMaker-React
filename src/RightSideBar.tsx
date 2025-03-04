@@ -36,47 +36,54 @@ const RightSideBar = () => {
   });
   const myImage = cld.image("templates/1.png");
   // Compute precise scaling ratios
-  const scaleX = imgOriginalSize.width / imgSize.width;
-  const scaleY = imgOriginalSize.height / imgSize.height;
+const scaleX = imgOriginalSize.width / imgSize.width;
+const scaleY = imgOriginalSize.height / imgSize.height;
 
-  // Scale font size proportionally
-  const adjustedFontSize = Math.round(fontSize * scaleX);
+// Scale font size proportionally
+const adjustedFontSize = Math.round(fontSize * scaleX);
 
-  // Estimate text width using an approximate character size multiplier
-  const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width (adjust as needed)
+// Estimate text width and height using an approximate character size multiplier
+const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width
+const estimatedTextHeight = adjustedFontSize; // Text height is usually 1 line height
 
-  // Correctly map X and Y positions based on original size
-  const mappedX = Math.max(
-    0,
-    Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
-  );
-  const mappedY = Math.max(
-    0,
-    Math.min(position.y * scaleY, imgOriginalSize.height - adjustedFontSize)
-  );
+// Compute safe positions for text placement
+const mappedX = Math.max(
+  0,
+  Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
+);
+const mappedY = Math.max(
+  0,
+  Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight) // Prevent Y overflow
+);
 
-  console.log("Original Image:", imgOriginalSize);
-  console.log("Scaled Image:", imgSize);
-  console.log("Original Position:", position);
-  console.log("Mapped Position (Absolute, Safe Area):", {
-    x: mappedX,
-    y: mappedY,
-  });
-  console.log("Estimated Text Width:", estimatedTextWidth);
-  console.log("Adjusted Font Size:", adjustedFontSize);
+// Adjust offsets only if there's enough space
+const adjustedX = mappedX + (mappedX + estimatedTextWidth < imgOriginalSize.width ? estimatedTextWidth / 8 : 0);
+const adjustedY = mappedY + (mappedY + estimatedTextHeight < imgOriginalSize.height - estimatedTextHeight ? adjustedFontSize / 2 : 0); // Prevents text from going below the image
 
-  // Apply position mapping using absolute values
-  myImage.overlay(
-    source(
-      cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
-        .textColor(color)
-    ).position(
-      new Position()
-        .gravity(compass("north_west"))
-        .offsetX(Math.round(mappedX + estimatedTextWidth / 8))
-        .offsetY(Math.round(mappedY + adjustedFontSize / 2)) // Use absolute values
-    )
-  );
+console.log("Original Image:", imgOriginalSize);
+console.log("Scaled Image:", imgSize);
+console.log("Original Position:", position);
+console.log("Mapped Position (Absolute, Safe Area):", { x: mappedX, y: mappedY });
+console.log("Estimated Text Width:", estimatedTextWidth);
+console.log("Estimated Text Height:", estimatedTextHeight);
+console.log("Adjusted Font Size:", adjustedFontSize);
+console.log("Final Adjusted Position:", { x: adjustedX, y: adjustedY });
+
+// Apply position mapping using absolute values
+myImage.overlay(
+  source(
+    cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
+      .textColor(color)
+  ).position(
+    new Position()
+      .gravity(compass("north_west"))
+      .offsetX(Math.round(adjustedX))
+      .offsetY(Math.round(adjustedY)) // Use absolute values
+  )
+);
+
+
+
 
   // Generate the Cloudinary URL
   const myUrl = myImage.toURL();
