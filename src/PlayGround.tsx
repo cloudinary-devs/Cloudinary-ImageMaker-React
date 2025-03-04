@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 
 const PlayGround = () => {
   const { selectedTemplate } = useTemplate();
-  const { text, color, font, fontSize, position, imgSize, setImgSize } = useTextOverlay();
+  const { text, color, font, fontSize, position, imgSize, setImgSize, setImgOriginalSize } = useTextOverlay();
   const imgRef = useRef<HTMLImageElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,8 +13,8 @@ const PlayGround = () => {
   useEffect(() => {
     const updateSize = () => {
       if (imgRef.current) {
-        const containerWidth = window.innerWidth * 0.8; // Scale to 80% of screen width
-        const containerHeight = window.innerHeight * 0.8; // Ensure it fits within viewport height
+        const containerWidth = window.innerWidth * 0.8;
+        const containerHeight = window.innerHeight * 0.8;
         const aspectRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
         let newWidth = Math.min(containerWidth, imgRef.current.naturalWidth);
         let newHeight = newWidth / aspectRatio;
@@ -28,6 +28,15 @@ const PlayGround = () => {
           width: newWidth,
           height: newHeight,
         });
+
+
+        setImgOriginalSize({
+          width: imgRef.current.naturalWidth,
+          height: imgRef.current.naturalHeight,
+        });
+
+        console.log('imgSize', imgSize);
+        console.log('imgOriginalSize', imgSize)
       }
     };
 

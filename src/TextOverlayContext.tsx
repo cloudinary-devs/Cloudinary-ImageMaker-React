@@ -13,6 +13,8 @@ interface TextOverlayContextProps {
   setPosition: (pos: { x: number; y: number }) => void;
   imgSize: { width: number; height: number };
   setImgSize: (size: { width: number; height: number }) => void;
+  imgOriginalSize: { width: number; height: number };
+  setImgOriginalSize: (size: { width: number; height: number }) => void;
 }
 
 const TextOverlayContext = createContext<TextOverlayContextProps | undefined>(undefined);
@@ -24,10 +26,11 @@ export const TextOverlayProvider = ({ children }: { children: React.ReactNode })
   const [fontSize, setFontSize] = useState(24);
   const [position, setPosition] = useState({ x: 50, y: 50 });
   const [imgSize, setImgSize] = useState({ width: 500, height: 500 });
+  const [imgOriginalSize, setImgOriginalSize] = useState({ width: 500, height: 500 });
 
   return (
     <TextOverlayContext.Provider
-      value={{ text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize, setImgSize }}
+      value={{ text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize, setImgSize, imgOriginalSize, setImgOriginalSize }}
     >
       {children}
     </TextOverlayContext.Provider>

@@ -7,9 +7,10 @@ import {source} from "@cloudinary/url-gen/actions/overlay";
 import {text as cloudinaryText} from "@cloudinary/url-gen/qualifiers/source";
 import { TextStyle } from "@cloudinary/url-gen/qualifiers/textStyle";
 import { Position } from "@cloudinary/url-gen/qualifiers";
+import { compass } from "@cloudinary/url-gen/qualifiers/gravity";
 
 const RightSideBar = () => {
-  const { text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize } = useTextOverlay();
+  const { text, setText, color, setColor, font, setFont, fontSize, setFontSize, position, setPosition, imgSize, imgOriginalSize } = useTextOverlay();
   const [csvData, setCsvData] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -20,16 +21,37 @@ const cld = new Cloudinary({
   }
 }); 
 
-// Use the image with public ID, 'sample'.
+// Ensure proportional scaling when generating the Cloudinary URL
 const myImage = cld.image('templates/1.png');
-//.resize(scale(Math.round(imgSize.width), Math.round(imgSize.height)))
+// Compute precise scaling ratios
+const scaleX = imgOriginalSize.width / imgSize.width;
+const scaleY = imgOriginalSize.height / imgSize.height;
+
+// Correctly map X and Y positions based on original size
+const mappedX = Math.round(position.x * scaleX);
+const mappedY = Math.round(position.y * scaleY);
+
+// Scale font size proportionally
+const adjustedFontSize = Math.round(fontSize * scaleX);
+
+console.log("Original Image:", imgOriginalSize);
+console.log("Scaled Image:", imgSize);
+console.log("Original Position:", position);
+console.log("Mapped Position (Absolute):", { x: mappedX, y: mappedY });
+
+// Apply position mapping using absolute values
 myImage.overlay(
-  source(cloudinaryText(text, new TextStyle(font, fontSize)).textColor(color)      
-  ).position(new Position().offsetY(position.y).offsetX(position.x))
+  source(
+    cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
+      .textColor(color)
+  ).position(
+    new Position().gravity(compass('north_west')).offsetX(mappedX).offsetY(mappedY) // Use absolute values
+  )
 );
-  // Return the delivery URL
-  const myUrl = myImage.toURL();
-  console.log(myUrl)
+
+// Generate the Cloudinary URL
+const myUrl = myImage.toURL();
+console.log(myUrl);
 
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
