@@ -1,7 +1,7 @@
 import { Cloudinary } from "@cloudinary/url-gen/index";
 import { useTextOverlay } from "./TextOverlayContext";
 import Papa from "papaparse";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 // Import required actions.
 import { source } from "@cloudinary/url-gen/actions/overlay";
 import { text as cloudinaryText } from "@cloudinary/url-gen/qualifiers/source";
@@ -26,7 +26,14 @@ const RightSideBar = () => {
     imgOriginalSize,
   } = useTextOverlay();
   const [csvData, setCsvData] = useState<string[]>([]);
+  const [generatedLinks, setGeneratedLinks] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (csvData.length > 0) {
+      setText(`${csvData[0]} ${text}`);
+    }
+  }, [csvData]);
 
   // Create and configure your Cloudinary instance.
   const cld = new Cloudinary({
@@ -60,15 +67,6 @@ const mappedY = Math.max(
 const adjustedX = mappedX + (mappedX + estimatedTextWidth < imgOriginalSize.width ? estimatedTextWidth / 8 : 0);
 const adjustedY = mappedY + (mappedY + estimatedTextHeight < imgOriginalSize.height - estimatedTextHeight ? adjustedFontSize / 2 : 0); // Prevents text from going below the image
 
-console.log("Original Image:", imgOriginalSize);
-console.log("Scaled Image:", imgSize);
-console.log("Original Position:", position);
-console.log("Mapped Position (Absolute, Safe Area):", { x: mappedX, y: mappedY });
-console.log("Estimated Text Width:", estimatedTextWidth);
-console.log("Estimated Text Height:", estimatedTextHeight);
-console.log("Adjusted Font Size:", adjustedFontSize);
-console.log("Final Adjusted Position:", { x: adjustedX, y: adjustedY });
-
 // Apply position mapping using absolute values
 myImage.overlay(
   source(
@@ -81,9 +79,6 @@ myImage.overlay(
       .offsetY(Math.round(adjustedY)) // Use absolute values
   )
 );
-
-
-
 
   // Generate the Cloudinary URL
   const myUrl = myImage.toURL();
@@ -105,6 +100,52 @@ myImage.overlay(
       },
     });
   };
+
+  const generateFlyers = () => {
+    const previewName = csvData[0] || "";
+    const previewTextWidth = fontSize * (previewName.length + text.length) * 0.6;
+    
+    const links: string[] = csvData.map((name) => {
+      const myImage = cld.image("templates/1.png");
+      
+      myImage.resize(fill().width(imgOriginalSize.width).height(imgOriginalSize.height));
+      
+      const scaleX = imgOriginalSize.width / imgSize.width;
+      const scaleY = imgOriginalSize.height / imgSize.height;
+      
+      const adjustedFontSize = Math.round(fontSize * scaleX);
+      const estimatedTextWidth = adjustedFontSize * (name.length + text.length) * 0.6;
+      const estimatedTextHeight = adjustedFontSize;
+      
+      let mappedX = Math.max(0, Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth * 0.9));
+      const mappedY = Math.max(0, Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight));
+      
+      // Prevent overflow on X-axis with finer adjustment
+      if (mappedX + estimatedTextWidth > imgOriginalSize.width) {
+        mappedX = imgOriginalSize.width - estimatedTextWidth * 0.6;
+      }
+      if (mappedX < 0) {
+        mappedX = 0;
+      }
+
+      myImage.overlay(
+        source(
+          cloudinaryText(`${name} ${text.replace(previewName, "")}`, new TextStyle(font, adjustedFontSize))
+            .textColor(color)
+        ).position(
+          new Position()
+            .gravity(compass("north_west"))
+            .offsetX(Math.round(mappedX))
+            .offsetY(Math.round(mappedY))
+        )
+      );
+      
+      return myImage.toURL();
+    });
+    console.log(links[1]);
+    setGeneratedLinks(links);
+  };
+  
   return (
     <div className="w-64 bg-gray-100 p-4 shadow-lg rounded-lg h-screen flex flex-col">
       <div className="flex-1">
@@ -175,6 +216,12 @@ myImage.overlay(
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
+      <button
+        onClick={generateFlyers}
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
+      >
+        Generate Flyers
+      </button>
         <input
           type="file"
           accept=".csv"
