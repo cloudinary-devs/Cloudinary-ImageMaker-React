@@ -28,7 +28,7 @@ const RightSideBar = () => {
     imgOriginalSize,
   } = useTextOverlay();
   const [csvData, setCsvData] = useState<string[]>([]);
-  const [generatedLinks, setGeneratedLinks] = useState<string[]>([]);
+  const [, setGeneratedLinks] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,42 +45,51 @@ const RightSideBar = () => {
   });
   const myImage = cld.image("templates/1.png");
   // Compute precise scaling ratios
-const scaleX = imgOriginalSize.width / imgSize.width;
-const scaleY = imgOriginalSize.height / imgSize.height;
+  const scaleX = imgOriginalSize.width / imgSize.width;
+  const scaleY = imgOriginalSize.height / imgSize.height;
 
-// Scale font size proportionally
-const adjustedFontSize = Math.round(fontSize * scaleX);
+  // Scale font size proportionally
+  const adjustedFontSize = Math.round(fontSize * scaleX);
 
-// Estimate text width and height using an approximate character size multiplier
-const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width
-const estimatedTextHeight = adjustedFontSize; // Text height is usually 1 line height
+  // Estimate text width and height using an approximate character size multiplier
+  const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width
+  const estimatedTextHeight = adjustedFontSize; // Text height is usually 1 line height
 
-// Compute safe positions for text placement
-const mappedX = Math.max(
-  0,
-  Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
-);
-const mappedY = Math.max(
-  0,
-  Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight) // Prevent Y overflow
-);
+  // Compute safe positions for text placement
+  const mappedX = Math.max(
+    0,
+    Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
+  );
+  const mappedY = Math.max(
+    0,
+    Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight) // Prevent Y overflow
+  );
 
-// Adjust offsets only if there's enough space
-const adjustedX = mappedX + (mappedX + estimatedTextWidth < imgOriginalSize.width ? estimatedTextWidth / 8 : 0);
-const adjustedY = mappedY + (mappedY + estimatedTextHeight < imgOriginalSize.height - estimatedTextHeight ? adjustedFontSize / 2 : 0); // Prevents text from going below the image
+  // Adjust offsets only if there's enough space
+  const adjustedX =
+    mappedX +
+    (mappedX + estimatedTextWidth < imgOriginalSize.width
+      ? estimatedTextWidth / 8
+      : 0);
+  const adjustedY =
+    mappedY +
+    (mappedY + estimatedTextHeight <
+    imgOriginalSize.height - estimatedTextHeight
+      ? adjustedFontSize / 2
+      : 0); // Prevents text from going below the image
 
-// Apply position mapping using absolute values
-myImage.overlay(
-  source(
-    cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
-      .textColor(color)
-  ).position(
-    new Position()
-      .gravity(compass("north_west"))
-      .offsetX(Math.round(adjustedX))
-      .offsetY(Math.round(adjustedY)) // Use absolute values
-  )
-);
+  // Apply position mapping using absolute values
+  myImage.overlay(
+    source(
+      cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
+        .textColor(color)
+    ).position(
+      new Position()
+        .gravity(compass("north_west"))
+        .offsetX(Math.round(adjustedX))
+        .offsetY(Math.round(adjustedY)) // Use absolute values
+    )
+  );
 
   // Generate the Cloudinary URL
   const myUrl = myImage.toURL();
@@ -105,23 +114,39 @@ myImage.overlay(
 
   const generateFlyers = async () => {
     const previewName = csvData[0] || "";
-    const previewTextWidth = fontSize * (previewName.length + text.length) * 0.6;
-    
+    const previewTextWidth =
+      fontSize * (previewName.length + text.length) * 0.6;
+
     const links: string[] = csvData.map((name) => {
       const myImage = cld.image("templates/1.png");
-      
-      myImage.resize(fill().width(imgOriginalSize.width).height(imgOriginalSize.height));
-      
+
+      myImage.resize(
+        fill().width(imgOriginalSize.width).height(imgOriginalSize.height)
+      );
+
       const scaleX = imgOriginalSize.width / imgSize.width;
       const scaleY = imgOriginalSize.height / imgSize.height;
-      
+
       const adjustedFontSize = Math.round(fontSize * scaleX);
-      const estimatedTextWidth = adjustedFontSize * (name.length + text.length) * 0.6;
+      const estimatedTextWidth =
+        adjustedFontSize * (name.length + text.length) * 0.6;
       const estimatedTextHeight = adjustedFontSize;
-      
-      let mappedX = Math.max(0, Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth * 0.9));
-      const mappedY = Math.max(0, Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight));
-      
+
+      let mappedX = Math.max(
+        0,
+        Math.min(
+          position.x * scaleX,
+          imgOriginalSize.width - estimatedTextWidth * 0.9
+        )
+      );
+      const mappedY = Math.max(
+        0,
+        Math.min(
+          position.y * scaleY,
+          imgOriginalSize.height - estimatedTextHeight
+        )
+      );
+
       // Prevent overflow on X-axis with finer adjustment
       if (mappedX + estimatedTextWidth > imgOriginalSize.width) {
         mappedX = imgOriginalSize.width - estimatedTextWidth * 0.6;
@@ -132,8 +157,10 @@ myImage.overlay(
 
       myImage.overlay(
         source(
-          cloudinaryText(`${name} ${text.replace(previewName, "")}`, new TextStyle(font, adjustedFontSize))
-            .textColor(color)
+          cloudinaryText(
+            `${name} ${text.replace(previewName, "")}`,
+            new TextStyle(font, adjustedFontSize)
+          ).textColor(color)
         ).position(
           new Position()
             .gravity(compass("north_west"))
@@ -141,7 +168,7 @@ myImage.overlay(
             .offsetY(Math.round(mappedY))
         )
       );
-      
+
       return myImage.toURL();
     });
     console.log(links[1]);
@@ -157,7 +184,7 @@ myImage.overlay(
     } else {
       const zip = new JSZip();
       const folder = zip.folder("Flyers");
-      
+
       if (folder) {
         await Promise.all(
           links.map(async (url, index) => {
@@ -166,89 +193,87 @@ myImage.overlay(
             folder.file(`flyer_${index + 1}.png`, blob);
           })
         );
-        
+
         const zipBlob = await zip.generateAsync({ type: "blob" });
         saveAs(zipBlob, "flyers.zip");
       }
     }
   };
-  
+
   return (
     <div className="w-64 bg-gray-100 p-4 shadow-lg rounded-lg h-screen flex flex-col">
       <div className="flex-1">
         <h2 className="text-lg font-semibold mb-4">Customize Text</h2>
-        <label className="mb-2">Text:</label>
+        <label className="mb-2">Text</label>
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="border p-2 rounded mb-2"
         />
-
-        <label className="mb-2">Color:</label>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="border p-2 rounded mb-2"
-        />
-
-        <label className="mb-2">Font:</label>
-        {/* As for font families, we offer several built-in options, including Arial, Verdana, Helvetica, Trebuchet MS, Times New Roman, Georgia, Courier New, Open Sans, Roboto, and Montserrat. */}
-        <select
-          value={font}
-          onChange={(e) => setFont(e.target.value)}
-          className="border p-2 rounded mb-2"
-        >
-          <option value="Arial">Arial</option>
-          <option value="Times New Roman">Times New Roman</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Verdana">Verdana</option>
-        </select>
-
-        <label className="mb-2">Font Size:</label>
-        <input
-          type="range"
-          min="10"
-          max="100"
-          value={fontSize}
-          onChange={(e) => setFontSize(Number(e.target.value))}
-          className="mb-2"
-        />
-        <span className="text-sm">{fontSize}px</span>
-
-        <label className="mb-2">X Position (max: {imgSize.width}):</label>
-        <input
-          type="range"
-          min="0"
-          max={imgSize.width - fontSize}
-          value={position.x}
-          onChange={(e) =>
-            setPosition({ ...position, x: Number(e.target.value) })
-          }
-          className="mb-2"
-        />
-
-        <label className="mb-2">Y Position (max: {imgSize.height}):</label>
-        <input
-          type="range"
-          min="0"
-          max={imgSize.height - fontSize}
-          value={position.y}
-          onChange={(e) =>
-            setPosition({ ...position, y: Number(e.target.value) })
-          }
-          className="mb-2"
-        />
+        <div>
+          <label className="mb-2">Color</label>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="border p-2 rounded mb-2 w-full"
+          />
+        </div>
+        <div>
+          <label className="mb-2">Font</label>
+          {/* As for font families, we offer several built-in options, including Arial, Verdana, Helvetica, Trebuchet MS, Times New Roman, Georgia, Courier New, Open Sans, Roboto, and Montserrat. */}
+          <select
+            value={font}
+            onChange={(e) => setFont(e.target.value)}
+            className="border p-2 rounded mb-2 w-full"
+          >
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+          </select>
+        </div>
+        <div>
+          <label className="mb-2 w-full">Font Size {fontSize}px</label>
+          <input
+            type="range"
+            min="10"
+            max="100"
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
+            className="mb-2 w-full"
+          />
+        </div>
+        <div>
+          <label className="mb-2">X Position</label>
+          <input
+            type="range"
+            min="0"
+            max={imgSize.width - fontSize}
+            value={position.x}
+            onChange={(e) =>
+              setPosition({ ...position, x: Number(e.target.value) })
+            }
+            className="mb-2 w-full"
+          />
+        </div>
+        <div>
+          <label className="mb-2">Y Position</label>
+          <input
+            type="range"
+            min="0"
+            max={imgSize.height - fontSize}
+            value={position.y}
+            onChange={(e) =>
+              setPosition({ ...position, y: Number(e.target.value) })
+            }
+            className="mb-2 w-full"
+          />
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-      <button
-        onClick={generateFlyers}
-        className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
-      >
-        Generate Flyers
-      </button>
         <input
           type="file"
           accept=".csv"
@@ -260,21 +285,29 @@ myImage.overlay(
           onClick={() => fileInputRef.current?.click()}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
         >
-          Upload CSV
+          Upload Name List
         </button>
-
-        <div className="w-full max-w-xs mt-4 p-2 bg-white shadow-lg rounded-lg flex-1 overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-2">CSV Names</h3>
-          <table className="w-full border-collapse border border-gray-300">
-            <tbody>
-              {csvData.map((name, index) => (
-                <tr key={index} className="border border-gray-300">
-                  <td className="p-2">{name}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {csvData.length > 0 && 
+        <button
+          onClick={generateFlyers}
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
+        >
+          Generate Flyers
+        </button>}
+        {csvData.length > 0 && (
+          <div className="w-full max-w-xs mt-4 p-2 bg-white shadow-lg rounded-lg flex-1 overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-2">CSV Names</h3>
+            <table className="w-full border-collapse border border-gray-300">
+              <tbody>
+                {csvData.map((name, index) => (
+                  <tr key={index} className="border border-gray-300">
+                    <td className="p-2">{name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
