@@ -9,6 +9,8 @@ import { TextStyle } from "@cloudinary/url-gen/qualifiers/textStyle";
 import { Position } from "@cloudinary/url-gen/qualifiers";
 import { compass } from "@cloudinary/url-gen/qualifiers/gravity";
 import { fill } from "@cloudinary/url-gen/actions/resize";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 const RightSideBar = () => {
   const {
@@ -101,7 +103,7 @@ myImage.overlay(
     });
   };
 
-  const generateFlyers = () => {
+  const generateFlyers = async () => {
     const previewName = csvData[0] || "";
     const previewTextWidth = fontSize * (previewName.length + text.length) * 0.6;
     
@@ -144,6 +146,31 @@ myImage.overlay(
     });
     console.log(links[1]);
     setGeneratedLinks(links);
+
+    if (links.length === 1) {
+      const link = document.createElement("a");
+      link.href = links[0];
+      link.download = "flyer.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      const zip = new JSZip();
+      const folder = zip.folder("Flyers");
+      
+      if (folder) {
+        await Promise.all(
+          links.map(async (url, index) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            folder.file(`flyer_${index + 1}.png`, blob);
+          })
+        );
+        
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        saveAs(zipBlob, "flyers.zip");
+      }
+    }
   };
   
   return (
