@@ -4,47 +4,63 @@ import { useRef, useState, useEffect } from "react";
 
 const PlayGround = () => {
   const { selectedTemplate } = useTemplate();
-  const { text, color, font, fontSize, position, imgSize, setImgSize, setImgOriginalSize } = useTextOverlay();
+  const {
+    text,
+    color,
+    font,
+    fontSize,
+    position,
+    imgSize,
+    setImgSize,
+    setImgOriginalSize,
+  } = useTextOverlay();
   const imgRef = useRef<HTMLImageElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [textSize, setTextSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const updateSize = () => {
-      if (imgRef.current && selectedTemplate) {
+      if (imgRef.current && selectedTemplate && imgRef.current.complete) {
         const containerWidth = window.innerWidth * 0.8;
         const containerHeight = window.innerHeight * 0.8;
-        const aspectRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
-        let newWidth = Math.min(containerWidth, imgRef.current.naturalWidth);
+        const aspectRatio =
+          imgRef.current.naturalWidth / imgRef.current.naturalHeight || 1;
+        let newWidth = Math.min(
+          containerWidth,
+          imgRef.current.naturalWidth || containerWidth
+        );
         let newHeight = newWidth / aspectRatio;
-        
+
         if (newHeight > containerHeight) {
           newHeight = containerHeight;
           newWidth = newHeight * aspectRatio;
         }
-        
+
         setImgSize({
           width: newWidth,
           height: newHeight,
         });
 
-
         setImgOriginalSize({
-          width: imgRef.current.naturalWidth,
-          height: imgRef.current.naturalHeight,
+          width: imgRef.current.naturalWidth || containerWidth,
+          height: imgRef.current.naturalHeight || containerHeight,
         });
-
-        console.log('imgSize', imgSize);
-        console.log('imgOriginalSize', imgSize)
       }
     };
 
     if (selectedTemplate) {
-      setTimeout(updateSize, 100);
+      const checkImageLoad = setInterval(() => {
+        if (imgRef.current && imgRef.current.complete) {
+          updateSize();
+          clearInterval(checkImageLoad);
+        }
+      }, 100);
     }
 
     window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
+    return () => {
+      window.removeEventListener("resize", updateSize);
+    };
   }, [selectedTemplate]);
 
   useEffect(() => {
@@ -56,13 +72,22 @@ const PlayGround = () => {
     }
   }, [text, font, fontSize, position, imgSize]);
 
-  const safeX = Math.max(0, Math.min(position.x, imgSize.width - textSize.width));
-  const safeY = Math.max(0, Math.min(position.y, imgSize.height - textSize.height));
-  
+  const safeX = Math.max(
+    0,
+    Math.min(position.x, imgSize.width - textSize.width)
+  );
+  const safeY = Math.max(
+    0,
+    Math.min(position.y, imgSize.height - textSize.height)
+  );
+
   return (
     <div className="flex flex-col items-center w-full h-screen bg-gray-200">
       {selectedTemplate ? (
-        <div className="relative" style={{ width: imgSize.width, height: imgSize.height }}>
+        <div
+          className="relative"
+          style={{ width: imgSize.width, height: imgSize.height }}
+        >
           <img
             ref={imgRef}
             src={`https://res.cloudinary.com/invite-maker/image/upload/v1/${selectedTemplate}`}
