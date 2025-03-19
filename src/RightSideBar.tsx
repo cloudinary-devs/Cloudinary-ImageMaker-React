@@ -133,7 +133,7 @@ const RightSideBar = () => {
     if (!selectedTemplate || selectedTemplate.length === 0) return;
     const previewName = csvData[0] || "";
     const links: string[] = csvData.map((name) => {
-      const myImage = cld.image(`templates/${selectedTemplate}`);
+      const myImage = cld.image(`${selectedTemplate}`);
 
       myImage.resize(
         fill().width(imgOriginalSize.width).height(imgOriginalSize.height)
