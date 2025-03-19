@@ -17,14 +17,13 @@ const LeftSideBar = () => {
   const getFlyersFromCloudinary = (images: string[], folderName: string) => {
     return images.map((image, index: number) => {
         const tempImg = cld.image(`${folderName}/${image}`);
-        const tempImgUrl = cld.image(`${folderName}/${image}`).toURL();
         return (
         <div
           key={index}
           className={`flex justify-center items-center relative cursor-pointer rounded-md overflow-hidden border-2 transition-all duration-300 hover:shadow-lg ${
             selectedTemplate === `/` + image ? "border-blue-500" : "border-transparent"
           }`}
-          onClick={() => setSelectedTemplate(tempImgUrl)}
+          onClick={() => setSelectedTemplate(tempImg?.publicID)}
         >
           <img src={tempImg.resize(fill().height(320)).toURL()} alt={`Template ${index + 1}`} className="object-cover hover:opacity-80" />
         </div>

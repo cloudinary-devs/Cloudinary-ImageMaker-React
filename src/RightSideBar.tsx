@@ -11,6 +11,7 @@ import { compass } from "@cloudinary/url-gen/qualifiers/gravity";
 import { fill } from "@cloudinary/url-gen/actions/resize";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { useTemplate } from "./TemplateContext";
 
 const RightSideBar = () => {
   const {
@@ -30,6 +31,7 @@ const RightSideBar = () => {
   const [csvData, setCsvData] = useState<string[]>([]);
   const [, setGeneratedLinks] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { selectedTemplate } = useTemplate();
 
   useEffect(() => {
     if (csvData.length > 0) {
@@ -43,57 +45,72 @@ const RightSideBar = () => {
       cloudName: "invite-maker",
     },
   });
-  const myImage = cld.image("templates/1.png");
-  // Compute precise scaling ratios
-  const scaleX = imgOriginalSize.width / imgSize.width;
-  const scaleY = imgOriginalSize.height / imgSize.height;
 
-  // Scale font size proportionally
-  const adjustedFontSize = Math.round(fontSize * scaleX);
+  useEffect(() => {
+    if (selectedTemplate && selectedTemplate.length > 0) {
+      const myImage = cld.image(`${selectedTemplate}`);
+      // Compute precise scaling ratios
+      const scaleX = imgOriginalSize.width / imgSize.width;
+      const scaleY = imgOriginalSize.height / imgSize.height;
 
-  // Estimate text width and height using an approximate character size multiplier
-  const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width
-  const estimatedTextHeight = adjustedFontSize; // Text height is usually 1 line height
+      // Scale font size proportionally
+      const adjustedFontSize = Math.round(fontSize * scaleX);
 
-  // Compute safe positions for text placement
-  const mappedX = Math.max(
-    0,
-    Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
-  );
-  const mappedY = Math.max(
-    0,
-    Math.min(position.y * scaleY, imgOriginalSize.height - estimatedTextHeight) // Prevent Y overflow
-  );
+      // Estimate text width and height using an approximate character size multiplier
+      const estimatedTextWidth = adjustedFontSize * text.length * 0.6; // Approximate width
+      const estimatedTextHeight = adjustedFontSize; // Text height is usually 1 line height
 
-  // Adjust offsets only if there's enough space
-  const adjustedX =
-    mappedX +
-    (mappedX + estimatedTextWidth < imgOriginalSize.width
-      ? estimatedTextWidth / 8
-      : 0);
-  const adjustedY =
-    mappedY +
-    (mappedY + estimatedTextHeight <
-    imgOriginalSize.height - estimatedTextHeight
-      ? adjustedFontSize / 2
-      : 0); // Prevents text from going below the image
+      // Compute safe positions for text placement
+      const mappedX = Math.max(
+        0,
+        Math.min(position.x * scaleX, imgOriginalSize.width - estimatedTextWidth)
+      );
+      const mappedY = Math.max(
+        0,
+        Math.min(
+          position.y * scaleY,
+          imgOriginalSize.height - estimatedTextHeight
+        ) // Prevent Y overflow
+      );
 
-  // Apply position mapping using absolute values
-  myImage.overlay(
-    source(
-      cloudinaryText(text, new TextStyle(font, adjustedFontSize)) // Scale font size correctly
-        .textColor(color)
-    ).position(
-      new Position()
-        .gravity(compass("north_west"))
-        .offsetX(Math.round(adjustedX))
-        .offsetY(Math.round(adjustedY)) // Use absolute values
-    )
-  );
+      // Adjust offsets only if there's enough space
+      const adjustedX =
+        mappedX +
+        (mappedX + estimatedTextWidth < imgOriginalSize.width
+          ? estimatedTextWidth / 8
+          : 0);
+      const adjustedY =
+        mappedY +
+        (mappedY + estimatedTextHeight <
+        imgOriginalSize.height - estimatedTextHeight
+          ? adjustedFontSize / 2
+          : 0); // Prevents text from going below the image
 
-  // Generate the Cloudinary URL
-  const myUrl = myImage.toURL();
-  console.log(myUrl);
+      // Apply position mapping using absolute values
+      const safeFont = font && font.length > 0 ? font : "Arial"; // Default to Arial if font is missing
+      const safeFontSize = fontSize > 0 ? fontSize : 20; // Default to 20px if fontSize is invalid
+      const adjustedFontSizes = Math.round(safeFontSize * scaleX);
+      
+      // Check if adjustedFontSizes is valid before using it
+      if (adjustedFontSizes > 0 && safeFont) {
+        myImage.overlay(
+          source(
+            cloudinaryText(text, new TextStyle(safeFont, adjustedFontSizes)) // Scale font size correctly
+              .textColor(color)
+          ).position(
+            new Position()
+              .gravity(compass("north_west"))
+              .offsetX(Math.round(adjustedX))
+              .offsetY(Math.round(adjustedY)) // Use absolute values
+          )
+        );
+
+        // Generate the Cloudinary URL
+        const myUrl = myImage.toURL();
+        console.log(myUrl);
+      }
+    }
+  }, [text, color, font, fontSize, position, imgSize, imgOriginalSize, selectedTemplate]);
 
   const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -113,12 +130,10 @@ const RightSideBar = () => {
   };
 
   const generateFlyers = async () => {
+    if (!selectedTemplate || selectedTemplate.length === 0) return;
     const previewName = csvData[0] || "";
-    const previewTextWidth =
-      fontSize * (previewName.length + text.length) * 0.6;
-
     const links: string[] = csvData.map((name) => {
-      const myImage = cld.image("templates/1.png");
+      const myImage = cld.image(`templates/${selectedTemplate}`);
 
       myImage.resize(
         fill().width(imgOriginalSize.width).height(imgOriginalSize.height)
@@ -129,7 +144,7 @@ const RightSideBar = () => {
 
       const adjustedFontSize = Math.round(fontSize * scaleX);
       const estimatedTextWidth =
-        adjustedFontSize * (name.length + text.length) * 0.6;
+        adjustedFontSize * (name.length + text.length) * 0.65;
       const estimatedTextHeight = adjustedFontSize;
 
       let mappedX = Math.max(
@@ -154,20 +169,24 @@ const RightSideBar = () => {
       if (mappedX < 0) {
         mappedX = 0;
       }
-
-      myImage.overlay(
-        source(
-          cloudinaryText(
-            `${name} ${text.replace(previewName, "")}`,
-            new TextStyle(font, adjustedFontSize)
-          ).textColor(color)
-        ).position(
-          new Position()
-            .gravity(compass("north_west"))
-            .offsetX(Math.round(mappedX))
-            .offsetY(Math.round(mappedY))
-        )
-      );
+      const safeFont = font || "Arial"; // Default to Arial if font is missing
+      const safeFontSize = fontSize > 0 ? fontSize : 20; // Default to 20px if fontSize is invalid
+      const adjustedFontSizes = Math.round(safeFontSize * scaleX);
+      if (adjustedFontSizes > 0 && safeFont) {
+        myImage.overlay(
+          source(
+            cloudinaryText(
+              `${name} ${text.replace(previewName, "")}`,
+              new TextStyle(safeFont, adjustedFontSizes)
+            ).textColor(color)
+          ).position(
+            new Position()
+              .gravity(compass("north_west"))
+              .offsetX(Math.round(mappedX))
+              .offsetY(Math.round(mappedY))
+          )
+        );
+      }
 
       return myImage.toURL();
     });
@@ -287,13 +306,14 @@ const RightSideBar = () => {
         >
           Upload Name List
         </button>
-        {csvData.length > 0 && 
-        <button
-          onClick={generateFlyers}
-          className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
-        >
-          Generate Flyers
-        </button>}
+        {csvData.length > 0 && (
+          <button
+            onClick={generateFlyers}
+            className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
+          >
+            Generate Flyers
+          </button>
+        )}
         {csvData.length > 0 && (
           <div className="w-full max-w-xs mt-4 p-2 bg-white shadow-lg rounded-lg flex-1 overflow-y-auto">
             <h3 className="text-lg font-semibold mb-2">CSV Names</h3>

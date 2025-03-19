@@ -20,7 +20,7 @@ interface TextOverlayContextProps {
 const TextOverlayContext = createContext<TextOverlayContextProps | undefined>(undefined);
 
 export const TextOverlayProvider = ({ children }: { children: React.ReactNode }) => {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(" ");
   const [color, setColor] = useState("#000000");
   const [font, setFont] = useState("Arial");
   const [fontSize, setFontSize] = useState(24);
