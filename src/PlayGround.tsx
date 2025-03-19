@@ -11,7 +11,7 @@ const PlayGround = () => {
 
   useEffect(() => {
     const updateSize = () => {
-      if (imgRef.current) {
+      if (imgRef.current && selectedTemplate) {
         const containerWidth = window.innerWidth * 0.8;
         const containerHeight = window.innerHeight * 0.8;
         const aspectRatio = imgRef.current.naturalWidth / imgRef.current.naturalHeight;
