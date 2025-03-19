@@ -8,7 +8,7 @@ interface TemplateContextType {
 const TemplateContext = createContext<TemplateContextType | undefined>(undefined);
 
 export const TemplateProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("1.png");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("templates/1.png");
 
   return (
     <TemplateContext.Provider value={{ selectedTemplate, setSelectedTemplate }}>
