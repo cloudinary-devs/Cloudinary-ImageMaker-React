@@ -1,51 +1,63 @@
-# React + TypeScript + Vite
+### Smart Invites Made Easy: Automate With Cloudinary and React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project demonstrates how to integrate **Cloudinary** and the **OpenAI SDK** to transform image content into actionable outputs. Built with **Node.js** on the backend and **React** on the frontend, the application showcases:  
 
-Currently, two official plugins are available:
+- **Image Upload**: Upload images to Cloudinary using Cloudinary's Upload Widget  
+- **Text Overlay**: Leverage Cloudinary's technology to add custom text overlay to your images    
+- **CSV upload and name auto-population**: Upload a CSV file with names and let the app generate personalized invites automatically.
+- **Cloud storage and optimization**: Store your files securely on Cloudinary using the Cloudinary Upload widget with upload presets, ensuring fast, optimized delivery.
+- **Downloadable invitations** Download all the invitations you created with just one click.
+- **Frontend Integration**: A React-powered user interface for uploading images and viewing results.  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Github Repo
+Take a deeper look to the code inside of the app [GitHub repo](https://github.com/cloudinary-devs/Cloudinary-ImageMaker-React).
 
-## Expanding the ESLint configuration
+## Clone the app via SSH
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+```git@github.com:cloudinary-devs/Cloudinary-ImageMaker-React.git```
 
-- Configure the top-level `parserOptions` property like this:
+## Set up the app locally
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
+```npm install```
+
+## Cloudinary setup
+
+- You will need to create a cloud name inside of your Cloudinary account. Keep in mind you will need a Cloudinary account, [register](https://cloudinary.com/users/register_free) for FREE. You can see find the detailed instructions on how to create a Cloud name in our [blog](You can also find detailed instructions in the [blog post](https://cloudinary.com/blog/smart-invites-made-easy-automate-react#cloudinary_upload_presets)) post.
+
+Then you will add this Cloud name in 2 different places:
+
+Fist place is in the LeftSideBar [component](https://github.com/cloudinary-devs/Cloudinary-ImageMaker-React/blob/main/src/LeftSideBar.tsx#L15)
+
+```javascript
+  const cld = new Cloudinary({
+    cloud: {
+      cloudName: "invite-maker",
     },
-  },
-})
+  });
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+In the Cloudinary Upload Widget [component](https://github.com/cloudinary-devs/Cloudinary-ImageMaker-React/blob/main/src/CloudinaryUploadWidget.tsx#L13):
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```javascript
+  const uwConfig = {
+    cloudName: "YOUR-CLOUD-NAME-HERE",
+    uploadPreset: "YOUR-UPLOAD-PRESET-HERE",
+    sources: ["local"],
+    multiple: true,
+    folder: `flyers`, //this is where the images will get stored
+  };
 ```
-# Cloudinary-InviteMaker-React
+
+You will need to create an Upload Preset for this app.
+
+In your account, ensure you’re inside the product environment you just created, then select Settings > Upload. Click + Add Upload Preset. 
+
+Enter the name of your preset. I named my preset “upload-images”. Now enter the folder name where they will live; mine is “flyers”. Click the Signing Mode dropdown and select Unsigned. For asset naming, make sure the two switches are turned on.
+
+You can also find detailed instructions in the [blog post](https://cloudinary.com/blog/smart-invites-made-easy-automate-react#cloudinary_upload_presets)
+
+For more detailed instructions on how to setup Cloudinary follow the instructions in [this blog post](https://cloudinary.com/blog/smart-invites-made-easy-automate-react).
+
+## Run the app locally
+
+```npm run dev```
